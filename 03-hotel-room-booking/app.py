@@ -3,6 +3,12 @@ import os
 
 app = Flask(__name__)
 
+room_types = {
+    "single-bed": "Single Bed",
+    "double-bed": "Double Bed",
+    "deluxe": "Deluxe Suite"
+}
+
 
 @app.route('/')
 def home():
@@ -16,14 +22,19 @@ def process_form():
     last_name = request.form.get('last-name')
     comments = request.form.get('comments')
     room_type = request.form.get('room')
+
+    # for checkboxes, we have to use form.request.getlist()
     amenities = request.form.getlist('amenities')
+
+    check_in_timing = request.form.get('check-in-timing')
 
     return render_template('results.template.html',
                            fname=first_name,
                            lname=last_name,
                            comments=comments,
-                           room_type=room_type,
-                           amenities=amenities)
+                           room_type=room_types[room_type],
+                           amenities=", ".join(amenities),
+                           check_in_timing=check_in_timing)
 
 
 # "magic code" -- boilerplate
