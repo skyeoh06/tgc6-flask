@@ -37,6 +37,16 @@ def process_form():
                            check_in_timing=check_in_timing)
 
 
+@app.route('/survey')
+def show_survey():
+    return render_template("survey.template.html")
+
+
+@app.route('/about-us')
+def about_us():
+    return render_template('about_us.template.html')
+
+
 # "magic code" -- boilerplate
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),
