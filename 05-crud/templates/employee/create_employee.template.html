@@ -1,0 +1,20 @@
+{% extends 'base.template.html' %}
+
+{%block content %}
+<h1>Create Employee</h1>
+<form method="POST">
+    <div class="form-group">
+        <label>Name</label>
+        <input type="text" class="form-control" name="employee_name">
+    </div>  
+    <div class="form-group">
+        <label>Job Title</label>
+        <input type="text" class="form-control" name="job_title">
+    </div>  
+    <div class="form-group">
+        <label>Salary</label>
+        <input type="text" class="form-control" name="salary">
+    </div>  
+    <input type="submit" class="btn btn-primary"/>
+</form>
+{%endblock%}
