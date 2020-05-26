@@ -77,6 +77,31 @@ def process_update_employee(employee_id):
     return redirect(url_for('read_employee'))
 
 
+@app.route('/employee/confirm_delete/<employee_id>')
+def confirm_to_delete_employee(employee_id):
+    employee = find_employee_by_id(employee_id)
+    return render_template('employee/confirm_delete.template.html', employee=employee)
+
+
+@app.route('/employee/delete/<employee_id>', methods=['POST'])
+def delete_employee(employee_id):
+
+    # step 0. retrieve all the employees in the .csv file in a list
+    all_employees = read_employees_from_file()
+
+    # step 1. find the employee that we have changed
+    employee_to_be_deleted = find_employee_by_id(employee_id)
+
+    for index in range(len(all_employees)):
+        if employee_to_be_deleted['id'] == all_employees[index]['id']:
+            # remove the employee to be deleted from the list of all employees
+            del all_employees[index]
+            break
+
+    write_to_file(all_employees)
+    return redirect(url_for('read_employee'))
+
+
 def find_employee_by_id(employee_id):
     employee = None
     with open('data.csv', 'r', newline="\n") as fp:
@@ -108,6 +133,17 @@ def read_employees_from_file():
                 'salary': line[3]
             })
     return all_employees
+
+
+def write_to_file(all_employees):
+    with open('data.csv', 'w', newline="\n") as fp:
+        writer = csv.writer(fp, delimiter=",")
+
+        # write in the header
+        writer.writerow(['id', 'employee_name', 'job_title', 'salary'])
+
+        for e in all_employees:
+            writer.writerow([e['id'], e['employee_name'], e['job_title'], e['salary']])
 
 
 # "magic code" -- boilerplate
