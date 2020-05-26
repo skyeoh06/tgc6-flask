@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
 import csv
+import random
 
 app = Flask(__name__)
 
@@ -22,28 +23,91 @@ def process_create_employee():
     print(request.form)
     with open('data.csv', 'a', newline="\n") as fp:
         writer = csv.writer(fp, delimiter=",")
+        id = random.randint(10000, 99999)
         name = request.form.get('employee_name')
         job_title = request.form.get('job_title')
         salary = request.form.get('salary')
-        writer.writerow([name, job_title, salary])
-    return "form recieved"
+        writer.writerow([id, name, job_title, salary])
+    return redirect(url_for('read_employee'))
 
 
 @app.route('/employees')
 def read_employee():
     # a state variable that represents all the employees in the system
-    all_employees = [] #accumulator
+    all_employees = read_employees_from_file()
+
+    return render_template('employee/view_employees.template.html', employees=all_employees)
+
+
+@app.route('/employee/update/<employee_id>')
+def update_employee(employee_id):
+    editing_employee = find_employee_by_id(employee_id)
+
+    return render_template('employee/update_employee.template.html', employee=editing_employee)
+
+
+@app.route('/employee/update/<employee_id>', methods=["POST"])
+def process_update_employee(employee_id):
+    # step 0. retrieve all the employees in the .csv file in a list
+    all_employees = read_employees_from_file()
+
+    # step 1. find the employee that we have changed
+    changed_employee = find_employee_by_id(employee_id)
+
+    # step 2. update the changed employee to match the form
+    changed_employee['employee_name'] = request.form.get('employee_name')
+    changed_employee['job_title'] = request.form.get('job_title')
+    changed_employee['salary'] = request.form.get('salary')
+
+    # step 3. overwrite the employee information in the list
+    for index in range(0, len(all_employees)):
+        if all_employees[index]['id'] == changed_employee['id']:
+            all_employees[index] = changed_employee
+
+    # step 4. write the entire list back to the csv file
+    with open('data.csv', 'w', newline="\n") as fp:
+        writer = csv.writer(fp, delimiter=",")
+
+        # write in the header
+        writer.writerow(['id', 'employee_name', 'job_title', 'salary'])
+
+        for e in all_employees:
+            writer.writerow([e['id'], e['employee_name'], e['job_title'], e['salary']])
+
+    return redirect(url_for('read_employee'))
+
+
+def find_employee_by_id(employee_id):
+    employee = None
+    with open('data.csv', 'r', newline="\n") as fp:
+        reader = csv.reader(fp, delimiter=",")
+        next(reader)  # skip the headr
+        for line in reader:
+            if line[0] == employee_id:
+                employee = {
+                    'id': line[0],
+                    'employee_name': line[1],
+                    'job_title': line[2],
+                    'salary': line[3]
+                }
+                break
+    return employee
+
+
+def read_employees_from_file():
+    all_employees = []  # accumulator
     # fp = open('data.csv', 'r', newline="\n")
     with open('data.csv', 'r', newline="\n") as fp:
         reader = csv.reader(fp, delimiter=",")
         next(reader)
         for line in reader:
             all_employees.append({
-                'employee_name': line[0],
-                'job_title': line[1],
-                'salary': line[2]
+                'id': line[0],
+                'employee_name': line[1],
+                'job_title': line[2],
+                'salary': line[3]
             })
-    return render_template('employee/view_employees.template.html', employees=all_employees)
+    return all_employees
 
 
 # "magic code" -- boilerplate
